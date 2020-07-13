@@ -1,7 +1,8 @@
 # Wiggot Sample Application
-### By Francisco Jauregui
+## By Francisco Jauregui
 
-* This POC (Proof Of Concept) application was created using *Ruby* languaje, *Sinatra* Framework, *Redis* as session manager and *SQLite3*, as the database to persist user data, in this particular case, the login credentials.<br></br>
+<br></br>
+This POC (Proof Of Concept) application was created using *Ruby* languaje, *Sinatra* Framework, *Redis* as session manager and *SQLite3*, as the database to persist user data, in this particular case, the login credentials.<br></br>
 The application has the following endpoints:
 
   * **POST/users**<br></br>
