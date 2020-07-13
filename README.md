@@ -24,7 +24,7 @@ cUrl example:
 
     #### Note:
     You must be loged in and have a valid, active token and send it as an Authorization header
- cUrl example:
+cUrl example:
     > curl 'localhost:4567/sum/100' -header 'Authorization: Bearer <<VALID_TOKEN>>'
 
   * GET/users
