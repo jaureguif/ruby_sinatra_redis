@@ -34,27 +34,27 @@ For debug purposes only, maybe for an admin role would work, after implementing 
     > curl localhost:4567/users
 
 
-* Configuration
+* Configuration<br></br>
 Config parameters can be setup in /config/config.yml
 
-* Database creation
+* Database creation<br></br>
 Database will be created the first time a call needs it (lazy initialize design patter)
 
-* Database initialization
+* Database initialization<br></br>
 Install and run the latest version of [sqlite3](https://www.sqlite.org/)
 
-* Redis initialization
+* Redis initialization<br></br>
 Install and run the latest version of [Redis](https://redis.io/)
 
-* How to run the app
+* How to run the app<br></br>
 The application can hold configuration for different environments, for this demo, redis is always running in localhost, but can be changed in the config.yml file, a db file will be created for one of each environment:
   * dev.db for development
   * tes.db for test env
   * prod.db for production
 
-1. Install required gems in Gemfile via Bundle or cli
+1. Install required gems in Gemfile via Bundle or cli.
 2. Set the environment variable according to your OS, eg, in windows:
-> set APP_ENV=production
-
+   > set APP_ENV=production
+4. Verify both Redis and SQLite servers are up and running.
 3. Now run the app with the following command:
-  >ruby wiggotSampleApp.rb
+   >ruby wiggotSampleApp.rb
