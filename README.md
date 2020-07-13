@@ -52,9 +52,9 @@ The application can hold configuration for different environments, for this demo
   * tes.db for test env
   * prod.db for production
 
-1 Install required gems in Gemfile via Bundle or cli
-2 Set the environment variable according to your OS, eg, in windows:
+1. Install required gems in Gemfile via Bundle or cli
+2. Set the environment variable according to your OS, eg, in windows:
 > set APP_ENV=production
 
-3 Now run the app with the following command:
+3. Now run the app with the following command:
   >ruby wiggotSampleApp.rb
