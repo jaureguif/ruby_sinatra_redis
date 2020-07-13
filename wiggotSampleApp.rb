@@ -8,6 +8,7 @@ require 'sinatra/config_file'
 require 'sqlite3'
 
 @@initializeDb = true
+@redis = nil
 
 config_file 'config/config.yml'
 
@@ -23,12 +24,14 @@ helpers do
     return {:email => userEmail,
             :id => user[0].to_s,
     }
-
   end
 
   def redis
-    puts "REDIS host: #{settings.redis_host}"
-    return Redis.new(host: settings.redis_host)
+    if redis.nil?
+      return Redis.new(host: settings.redis_host)
+    else
+      return @redis
+    end
   end
 
   def connection
@@ -40,19 +43,33 @@ helpers do
   end
 
   def initDb
-    puts "Initializind db, env:#{settings.env}:"
+    puts "Initializind db, env:#{settings.env} db name:#{settings.sqlite_db_name}"
     if @@initializeDb
-      db = SQLite3::Database.open(settings.sqlite_db_name)
-      db.execute("CREATE TABLE IF NOT EXISTS
-        users(user_id INTEGER PRIMARY KEY, user_email TEXT UNIQUE, password_digest TEXT)")
-      if(settings.env == 'development')
-        puts "setting up non prod db"
+      db = SQLite3::Database.new(settings.sqlite_db_name)
+      db.execute(<<-EOS)
+        CREATE TABLE IF NOT EXISTS users (
+          user_id INTEGER PRIMARY KEY,
+          user_email TEXT UNIQUE NOT NULL,
+          password_digest TEXT NOT NULL)
+      EOS
 
+      #execute further settings depending on the environment to deployed
+      case settings.env
+
+      when 'development'
+        puts "setting up dev db"
         db.execute("DELETE FROM users")
-
         password_hash = BCrypt::Password.create("123")
         db.execute("INSERT INTO users(user_email, password_digest) VALUES(?, ?)",
         ['abc', password_hash.to_s])
+
+      when 'test'
+        # test db setup goes here
+        puts "setting up test db"
+
+      when 'production'
+        # PROD db setup goes here
+        puts "setting up prod db"
       end
       db.close
       @@initializeDb  = false;
@@ -73,14 +90,13 @@ helpers do
 end
 
 get "/users" do
+  # for debug purposses only,
+  # maybe for an admin role would work,
+  # after implementing authorization on top of authentication
   results = connection { |db|
     db.execute("SELECT * FROM users")
   }
   results.to_json
-end
-
-get "/signup" do
-  haml :signup
 end
 
 post "/signup" do
@@ -100,13 +116,10 @@ post "/users" do
   body = request.body.read.to_s
   puts "POST/user invoked. params :#{body}"
   begin
-      puts "1"
     params = JSON.parse(body)
-      puts "2"
     userEmail =  params['userEmail'].to_s.strip
     password =  params['password'].to_s
     if userEmail.size == 0 || password.size == 0
-      puts "2.1"
       raise "Bad Request."
     end
     #TODO enforce strong password policy
@@ -164,52 +177,3 @@ get "/sum/:n" do
     halt 403, {error: 'Access denied. You do not have authorization to view this page.'}.to_json
   end
 end
-
-__END__
-@@layout
-!!! 5
-%html
-  %head
-    %title Ruby Sinatra Redis Authentication
-  %body
-  =yield
-@@index
--if login?
-  %h1= "Welcome #{username}!"
-  %h3= "Your email is TBD"
-  %a{:href => "/logout"} Logout
--else
-  -if !@message.nil?
-    %h3= @message
-  %form(action="/login" method="post")
-
-    %div
-      %label(for="username")Username:
-      %input#username(type="text" name="username")
-    %div
-      %label(for="password")Password:
-      %input#password(type="password" name="password")
-    %div
-      %input(type="submit" value="Login")
-      %input(type="reset" value="Clear")
-  %p
-    %a{:href => "/signup"} Signup
-@@signup
-%p Enter the username and password!
-%form(action="/signup" method="post")
-  %div
-    %label(for="username")Username:
-    %input#username(type="text" name="username")
-  %div
-    %label(for="password")Password:
-    %input#password(type="password" name="password")
-  %div
-    %label(for="checkpassword")Password:
-    %input#password(type="password" name="checkpassword")
-  %div
-    %input(type="submit" value="Sign Up")
-    %input(type="reset" value="Clear")
-@@error
-%p Wrong username or password
-%p Please try again!
-%a{:href => "/"} Login

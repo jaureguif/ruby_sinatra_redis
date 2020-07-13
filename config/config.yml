@@ -2,14 +2,17 @@
 development:
   env: 'development'
   redis_host: 'localhost'
+  token_expiration_minutes: 1
   sqlite_db_name: 'database/dev.db'
 
 test:
   env: 'test'
-  redis_host: 'testhost'
-  sqlite_db_name: 'test_db_file_name'
-  
+  redis_host: 'localhost'
+  token_expiration_minutes: 10
+  sqlite_db_name: 'database/test.db'
+
 production:
   env: 'production'
-  redis_host: 'prodhost'
-  sqlite_db_name: 'prod_db_file_name'
+  redis_host: 'localhost'
+  token_expiration_minutes: 30
+  sqlite_db_name: 'database/prod.db'
