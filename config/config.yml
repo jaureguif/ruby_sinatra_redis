@@ -2,17 +2,17 @@
 development:
   env: 'development'
   redis_host: 'localhost'
-  token_expiration_minutes: 1
+  token_expiration_minutes: 3.5 #3minutes, 30 seconds
   sqlite_db_name: 'database/dev.db'
 
 test:
   env: 'test'
   redis_host: 'localhost'
-  token_expiration_minutes: 10
+  token_expiration_minutes: 10 #10 minutes
   sqlite_db_name: 'database/test.db'
 
 production:
   env: 'production'
   redis_host: 'localhost'
-  token_expiration_minutes: 30
+  token_expiration_minutes: 30 #30 minutes
   sqlite_db_name: 'database/prod.db'

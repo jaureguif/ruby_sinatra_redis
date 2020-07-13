@@ -130,7 +130,7 @@ helpers do
 end
 
 get "/users" do
-  # for debug purposses only,
+  # for debug purposes only,
   # maybe for an admin role would work,
   # after implementing authorization on top of authentication
   results = connection { |db|
@@ -181,7 +181,7 @@ post "/login" do
       rd = redis
       rd.multi do
         rd.set(token, params[:email])
-        rd.expire(token, settings.token_expiration_minutes.to_i * 60)
+        rd.expire(token, (settings.token_expiration_minutes.to_f * 60).to_i)
       end
       halt 200, {token: token}.to_json
     end
@@ -195,9 +195,9 @@ get "/sum/:n" do
     n = params['n']
     n = n.to_i
     {
-      :sum => n * (n + 1) / 2,
-      :userId => user[:id],
-      :userEmail => user[:email]
+      sum: n * (n + 1) / 2,
+      userId: => user[:id],
+      userEmail: => user[:email]
     }.to_json
   else
     halt 403, {error: 'Access denied. You do not have authorization to view this page.'}.to_json
