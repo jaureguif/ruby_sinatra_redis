@@ -8,7 +8,7 @@ require 'sinatra/config_file'
 require 'sqlite3'
 
 @@initializeDb = true
-@redis = nil
+@@redis = nil
 
 config_file 'config/config.yml'
 
@@ -26,20 +26,53 @@ helpers do
     }
   end
 
+  def extract_params(body)
+    begin
+      json = JSON.parse(body)
+      params = {
+        email: json['userEmail'].to_s.strip,
+        password: json['password'].to_s
+      }
+      yield params if block_given?
+      #TODO enforce strong password policy
+      #TODO VALIDATE email puts "regex? #{(params[:userEmail] =~ URI::MailTo::EMAIL_REGEXP)}"
+    rescue => e
+      puts "rescued! #{e}"
+      halt 400, {error: 'Bad Request.'}.to_json
+    end
+    return params
+  end
+
+  def crypt(password)
+    return BCrypt::Password.create(password).to_s
+  end
+
   def redis
-    if redis.nil?
+    if @@redis.nil?
       return Redis.new(host: settings.redis_host)
     else
-      return @redis
+      return @@redis
     end
   end
 
   def connection
-    initDb()
-    db = SQLite3::Database.open(settings.sqlite_db_name)
-    r = yield db
-    db.close
-    return r
+    begin
+      initDb()
+      db = SQLite3::Database.open(settings.sqlite_db_name)
+      r = yield db
+      db.close
+      return r
+    rescue => e
+      puts "Rescued! #{e}"
+      halt 500
+    end
+  end
+
+  def insertUserStmnt(db)
+    return db.prepare(<<-EOS)
+      INSERT INTO users(user_email, password_digest)
+      VALUES(:email, :hash)
+    EOS
   end
 
   def initDb
@@ -58,10 +91,12 @@ helpers do
 
       when 'development'
         puts "setting up dev db"
+        #delete all previous records
         db.execute("DELETE FROM users")
-        password_hash = BCrypt::Password.create("123")
-        db.execute("INSERT INTO users(user_email, password_digest) VALUES(?, ?)",
-        ['abc', password_hash.to_s])
+        stmt = insertUserStmnt(db)
+        stmt.execute( email: 'abc@wiggot.com',
+                      hash: crypt("123"))
+        stmt.close
 
       when 'test'
         # test db setup goes here
@@ -81,8 +116,13 @@ helpers do
     if request.env['HTTP_AUTHORIZATION'].nil?
       return false
     else
-      puts "token in request: #{request.env['HTTP_AUTHORIZATION']}"
-      token = redis.get(request.env['HTTP_AUTHORIZATION'])
+      authHeader = request.env['HTTP_AUTHORIZATION']
+      puts "token in request: #{authHeader}"
+      if authHeader["Bearer"]
+        authHeader[0,7] = ""
+        puts "trimmed token:#{authHeader}"
+      end
+      token = redis.get(authHeader)
       puts "token nil?: #{token.nil?}"
       return !token.nil?
     end
@@ -99,54 +139,40 @@ get "/users" do
   results.to_json
 end
 
-post "/signup" do
-  puts "/signup called params :#{params} -- params.to_s #{params.to_s}"
-  puts params[:username] =~ URI::MailTo::EMAIL_REGEXP
-  #save into database
-  password_hash = BCrypt::Password.create(params[:password])
-  results = connection { |db|
-    db.execute("INSERT INTO users(user_email, password_digest) VALUES(?, ?)",
-    [params[:userEmail], password_hash.to_s])
-  }
-  @message = "User created!"
-  haml :index
-end
-
 post "/users" do
   body = request.body.read.to_s
   puts "POST/user invoked. params :#{body}"
-  begin
-    params = JSON.parse(body)
-    userEmail =  params['userEmail'].to_s.strip
-    password =  params['password'].to_s
-    if userEmail.size == 0 || password.size == 0
+
+  params = extract_params(body){ |params|
+    if params[:email].size == 0 || params[:password].size == 0
       raise "Bad Request."
     end
-    #TODO enforce strong password policy
-    #TODO VALIDATE email puts "regex? #{(params[:userEmail] =~ URI::MailTo::EMAIL_REGEXP)}"
-  rescue
-    halt 400, {error: 'Bad Request.'}.to_json
-  end
-
+  }
   #save into database
-  password_hash = BCrypt::Password.create(password)
   connection { |db|
-    db.execute("INSERT INTO users(user_email, password_digest) VALUES(?, ?)",
-    [userEmail, password_hash.to_s])
+    stmt = insertUserStmnt(db)
+    stmt.execute(email: params[:email], hash: crypt(params[:password]))
+    stmt.close
   }
   201
 end
 
 post "/login" do
+  body = request.body.read.to_s
+  puts "POST/user invoked. params :#{body}"
+  params = extract_params(body)
+  puts params
   results = connection { |db|
-    db.execute("SELECT password_digest FROM users WHERE user_email = ?",
-    [params[:username]])
+    db.execute("SELECT password_digest FROM users WHERE user_email = ?", params[:email])
   }
 
   #if userTable.has_key?(params[:username])
   if results.size > 0
+    puts "101 results #{results}"
     restored_hash = BCrypt::Password.new results[0][0].to_s
-    if restored_hash == params[:password]
+    puts "restored #{restored_hash}, pas #{params[:password]}"
+    if restored_hash == params[:password].to_s
+      puts "102"
       # "password match!!!"
       #Generate token
       token = SecureRandom.base64(16)
@@ -154,8 +180,8 @@ post "/login" do
       #save token into Redis
       rd = redis
       rd.multi do
-        rd.set(token, params[:username])
-        rd.expire(token, 27)
+        rd.set(token, params[:email])
+        rd.expire(token, settings.token_expiration_minutes.to_i * 60)
       end
       halt 200, {token: token}.to_json
     end
