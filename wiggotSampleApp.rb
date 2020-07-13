@@ -21,8 +21,8 @@ helpers do
       [userEmail])
     }
     user = results[0]
-    return {:email => userEmail,
-            :id => user[0].to_s,
+    return {email: userEmail,
+            id: user[0].to_s,
     }
   end
 
@@ -64,7 +64,7 @@ helpers do
       return r
     rescue => e
       puts "Rescued! #{e}"
-      halt 500
+      halt 500, {error: "#{e}"}.to_json
     end
   end
 
@@ -196,8 +196,8 @@ get "/sum/:n" do
     n = n.to_i
     {
       sum: n * (n + 1) / 2,
-      userId: => user[:id],
-      userEmail: => user[:email]
+      userId: user[:id],
+      userEmail: user[:email]
     }.to_json
   else
     halt 403, {error: 'Access denied. You do not have authorization to view this page.'}.to_json
