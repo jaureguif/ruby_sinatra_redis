@@ -8,13 +8,13 @@ The application has the following endpoints:
   * **POST/users**<br></br>
 Creates a new User and stores it in the database, the password is encrypted in the database, anyone can use this endpoint, as a singup service, but it can be easily restricted to authenticated users.
     <br></br>cUrl example:
-    > curl -X POST -H "Content-Type: application/json" -d "{\\"userEmail\\":\\"user@wiggot.com\\",\\"password\\":\\"supersecret\\"}" localhost:4567/users
+    > curl -X POST -H "Content-Type: application/json" -d "{\\"userEmail\\" : \\"user@wiggot.com\\", \\"password\\" : \\"supersecret\\"}" localhost:4567/users
 
   * **POST/login**<br></br>
  Verifies that the provided params match the given user and return a token the is added to Redis with an expiration time configured in the config file.
  If credentials do not match app will return a 401 status code, if a param is missing, you will get a 400, bad request, status code.
     <br></br>cUrl example:
-    > curl -X POST -H "Content-Type: application/json" -d "{\"userEmail\":\"user@wiggot.com\",\"password\":\"supersecret\"}" localhost:4567/login
+    > curl -X POST -H "Content-Type: application/json" -d "{\\"userEmail\\" : \\"user@wiggot.com\\", \\"password\\" : \\"supersecret\\"}" localhost:4567/login
 
   * **GET/sum/{n}**<br></br>
  Will calculate the sum of numbers from 1 to {n}, it will also retrieve the user information from database based on the active token stored in Redis, thus, the endpoint result will be conformed of
