@@ -12,8 +12,8 @@ Creates a new User and stores it in the database, the password is encrypted in t
 
   * POST/login
  Verifies that the provided params match the given user and return a token the is added to Redis with an expiration time configured in the config file.
- If credentials do not match app will return a 401 status code, if a param is missing, you will get a 400, bad request, estatus code.
- cUrl example:
+ If credentials do not match app will return a 401 status code, if a param is missing, you will get a 400, bad request, status code.
+    cUrl example:
     > curl -X POST 'localhost:4567/login' -h 'Content-type: application/json' -data '{ "userEmail": "user@wiggot.com", "password": "supersecret"}'
 
   * GET/sum/{n}
