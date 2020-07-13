@@ -6,13 +6,12 @@
 The application has the following endpoints:
 
   * POST/users
-Creates a new User and stores it in the database, the password is encrypted in the database, anyone can use this endpoint, as a singup service, but it can be easily restricted to authenticated users.
-- cUrl example:
+Creates a new User and stores it in the database, the password is encrypted in the database, anyone can use this endpoint, as a singup service, but it can be easily restricted to authenticated users. \\ cUrl example:
     > curl --location --request POST 'localhost:4567/users' -h 'Content-type: application/json' -d '{ "userEmail": "user@wiggot.com","password": "supersecret"}'
 
   * POST/login
  Verifies that the provided params match the given user and return a token the is added to Redis with an expiration time configured in the config file.
- If credentials do not match app will return a 401 status code, if a param is missing, you will get a 400, bad request, status code.\s\scUrl example:
+ If credentials do not match app will return a 401 status code, if a param is missing, you will get a 400, bad request, status code. \s\s cUrl example:
     > curl -X POST 'localhost:4567/login' -h 'Content-type: application/json' -data '{ "userEmail": "user@wiggot.com", "password": "supersecret"}'
 
   * GET/sum/{n}
@@ -22,8 +21,7 @@ Creates a new User and stores it in the database, the password is encrypted in t
     * *userEmail*, the stored user email, also used as a user identifier in login
 
     #### Note:
-    You must be loged in and have a valid, active token and send it as an Authorization header.
-cUrl example:
+    You must be loged in and have a valid, active token and send it as an Authorization header.<br></br>cUrl example:
     > curl 'localhost:4567/sum/100' -header 'Authorization: Bearer <<VALID_TOKEN>>'
 
   * GET/users
