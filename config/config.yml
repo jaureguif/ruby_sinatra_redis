@@ -1,0 +1,15 @@
+
+development:
+  env: 'development'
+  redis_host: 'localhost'
+  sqlite_db_name: 'database/dev.db'
+
+test:
+  env: 'test'
+  redis_host: 'testhost'
+  sqlite_db_name: 'test_db_file_name'
+  
+production:
+  env: 'production'
+  redis_host: 'prodhost'
+  sqlite_db_name: 'prod_db_file_name'
